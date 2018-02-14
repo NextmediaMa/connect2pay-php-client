@@ -1030,13 +1030,12 @@ class Connect2PayClient {
   public function handleRedirectStatus($encryptedData, $merchantToken) {
     $key = $this->urlsafe_base64_decode($merchantToken);
     $binData = $this->urlsafe_base64_decode($encryptedData);
-
     // Decrypting
-    $json = mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, $binData, MCRYPT_MODE_ECB);
+    $json = openssl_decrypt($binData, 'aes-128-ecb', $key, true);
 
     if ($json) {
       // Remove PKCS#5 padding
-      $json = $this->pkcs5_unpad($json);
+      //$json = $this->pkcs5_unpad($json);
       $status = json_decode($json, false);
 
       if ($status != null && is_object($status)) {
@@ -1199,7 +1198,6 @@ class Connect2PayClient {
 
           $transactionAttempts[] = $transAttempt;
         }
-
         $this->status->setTransactions($transactionAttempts);
       }
     }
@@ -1260,12 +1258,12 @@ class Connect2PayClient {
       // The initial text was empty
       return "";
     }
+    td($text);
 
     if (strspn($text, chr($pad), strlen($text) - $pad) != $pad) {
       // The length of the padding sequence is incorrect
       return false;
     }
-
     return substr($text, 0, -1 * $pad);
   }
 
